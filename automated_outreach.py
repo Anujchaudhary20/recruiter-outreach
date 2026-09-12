@@ -1,3 +1,7 @@
+import os  # ← ADD THIS LINE
+import json
+import requests
+from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
