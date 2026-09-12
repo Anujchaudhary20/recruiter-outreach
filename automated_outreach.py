@@ -235,15 +235,70 @@ def update_excel_tracker(recruiter_data):
         print(f"⚠️ Excel update error: {e}")
 
 def scrape_linkedin_recruiters():
-    """Scrape LinkedIn for India-based recruiters"""
-    print("🔍 Searching for recruiters...")
+    """Scrape LinkedIn for India-based recruiters using Firecrawl"""
+    print("🔍 Searching for NEW recruiters on LinkedIn...")
     
-    # Using test data for now
-    # TODO: Replace with real Firecrawl integration
-    recruiters = TEST_RECRUITERS
+    recruiters = []
     
-    print(f"✅ Found {len(recruiters)} recruiters")
-    return recruiters
+    search_queries = [
+        'Java developer hiring India recruiter',
+        'Spring Boot jobs India recruiting',
+        'backend engineer India hiring manager',
+        'Java microservices jobs India',
+        'senior Java developer jobs India',
+        'Java engineer recruitment India',
+        'tech recruiter Java India',
+        'hiring Java backend India',
+    ]
+    
+    for query in search_queries:
+        try:
+            # Search Google for LinkedIn posts matching query
+            search_url = f"https://www.google.com/search?q={query}+site:linkedin.com"
+            
+            print(f"  🔎 Searching: {query}")
+            
+            # Use Firecrawl to extract
+            if FIRECRAWL_API_KEY:
+                response = requests.post(
+                    'https://api.firecrawl.dev/v1/extract',
+                    headers={'Authorization': f'Bearer {FIRECRAWL_API_KEY}'},
+                    json={
+                        'url': search_url,
+                        'extractionSchema': {
+                            'type': 'object',
+                            'properties': {
+                                'recruiter_name': {'type': 'string'},
+                                'company': {'type': 'string'},
+                                'email': {'type': 'string'},
+                                'location': {'type': 'string'},
+                                'job_description': {'type': 'string'}
+                            }
+                        }
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'data' in data and isinstance(data['data'], list):
+                        recruiters.extend(data['data'])
+                        print(f"    ✅ Found {len(data['data'])} from this query")
+        
+        except Exception as e:
+            print(f"    ⚠️ Error: {e}")
+    
+    # Remove duplicates by email
+    unique_recruiters = {}
+    for recruiter in recruiters:
+        email = recruiter.get('email', '')
+        if email and email not in unique_recruiters:
+            unique_recruiters[email] = recruiter
+    
+    final_recruiters = list(unique_recruiters.values())[:50]  # Max 50 per day
+    
+    print(f"\n✅ Found {len(final_recruiters)} UNIQUE recruiters\n")
+    
+    return final_recruiters if final_recruiters else TEST_RECRUITERS  # Fallback to test if no results
 
 class OutreachAutomation:
     def __init__(self):
