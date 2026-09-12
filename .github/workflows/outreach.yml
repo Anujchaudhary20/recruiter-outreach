@@ -1,10 +1,9 @@
 name: Daily LinkedIn Recruiter Outreach
 
-# Trigger: Daily at 10:30 AM IST (05:00 AM UTC)
 on:
   schedule:
     - cron: '0 5 * * *'  # 10:30 AM IST = 05:00 AM UTC
-  workflow_dispatch:     # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   outreach:
@@ -36,7 +35,7 @@ jobs:
     
     - name: Upload Excel tracker
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: recruiter_tracking
         path: recruiter_tracking.xlsx
